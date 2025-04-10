@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scattering Rate for 6 GeV e⁺ Beam (Cu, Os, Al, W)</title>
+  <!-- Include Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="chart-container">
+    <h2>Scattering Rate vs. Angle (6 GeV e⁺ Beam, Cu, Os, Al, W)</h2>
+    <canvas id="positronChart"></canvas>
+  </div>
+</body>
+</html>
+
+CSS code
+
+body {
+  background-color: #f4f4f4;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+.chart-container {
+  width: 80%;
+  max-width: 800px;
+  background: white;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+JAVA code
+
+// Define angles for the e⁺ graph (0 to 180 degrees in 5-degree increments)
+const angles = Array.from({ length: 37 }, (_, i) => i * 5);
+
+// Scattering rate function for e⁺ (modified Rutherford-like distribution)
+function scatteringRate(angle, peakRate, zFactor) {
+  const theta = Math.max(angle, 0.1) * (Math.PI / 180);
+  const sinThetaOver2 = Math.sin(theta / 2);
+  const rutherfordTerm = 1 / Math.pow(sinThetaOver2, 4);
+  const formFactor = Math.exp(-angle / 50); // Form factor for 6 GeV e⁺
+  return peakRate * zFactor * rutherfordTerm * formFactor / 100000;
+}
+
+// Materials and base rates for 6 GeV e⁺ beam
+const materials = ['Osmium', 'Tungsten', 'Copper', 'Aluminum'];
+const peakRates = [6000, 5800, 5000, 3000]; // 6 GeV peak rates for e⁺
+const zFactors = [1.0, 0.97, 0.83, 0.5];
+
+// Calculate 6 GeV scattering rates for e⁺
+const positronRates = peakRates.map((peak, i) =>
+  angles.map(angle => scatteringRate(angle, peak, zFactors[i]))
+);
+
+// Positron (e⁺) Scattering Rate vs. Angle Chart
+const positronCtx = document.getElementById('positronChart').getContext('2d');
+
+// e⁺ Chart
+new Chart(positronCtx, {
+  type: 'line',
+  data: {
+    labels: angles,
+    datasets: [
+      { label: '6 GeV e⁺, Osmium', data: positronRates[0], borderColor: 'rgba(255, 99, 132, 1)', fill: false, tension: 0.4, pointStyle: 'circle', pointRadius: 5 },
+      { label: '6 GeV e⁺, Tungsten', data: positronRates[1], borderColor: 'rgba(54, 162, 235, 1)', fill: false, tension: 0.4, pointStyle: 'circle', pointRadius: 5 },
+      { label: '6 GeV e⁺, Copper', data: positronRates[2], borderColor: 'rgba(75, 192, 192, 1)', fill: false, tension: 0.4, pointStyle: 'circle', pointRadius: 5 },
+      { label: '6 GeV e⁺, Aluminum', data: positronRates[3], borderColor: 'rgba(153, 102, 255, 1)', fill: false, tension: 0.4, pointStyle: 'circle', pointRadius: 5 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Scattering Rate vs. Angle (DESY 6 GeV e⁺ Beam)',
+        font: { size: 16 }
+      },
+      legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Scattering Angle (degrees)' }, min: 0, max: 180 },
+      y: { title: { display: true, text: 'Rate/Hz' }, min: 0, max: 7000 }
+    }
+  }
+});
